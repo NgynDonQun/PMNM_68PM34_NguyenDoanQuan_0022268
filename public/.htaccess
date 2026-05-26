@@ -1,0 +1,9 @@
+Options -Indexes
+RewriteEngine On
+
+# Nếu file/thư mục thật sự tồn tại thì không rewrite
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Tất cả request đều đi qua index.php
+RewriteRule ^(.*)$ index.php?route=$1 [QSA,L]
