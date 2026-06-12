@@ -1,9 +1,11 @@
-Options -Indexes
-RewriteEngine On
+RewriteEngine on
 
-# Nếu file/thư mục thật sự tồn tại thì không rewrite
+#Không cho xem cấu trúc thư mục
+Options -Indexes
+
+# Đảm bảo các yêu cầu không phải là một tệp hoặc thư mục thực!
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 
-# Tất cả request đều đi qua index.php
-RewriteRule ^(.*)$ index.php?route=$1 [QSA,L]
+# Điều hướng tất cả các yêu cầu tới index.php
+RewriteRule ^(.*)$ index.php?url=$1

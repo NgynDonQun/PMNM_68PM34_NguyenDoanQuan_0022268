@@ -32,6 +32,7 @@
 
 <body>
   <h1><?php echo $title; ?></h1>
+  <a href="/sinhvien/create" class="btn btn-success" style="margin-bottom: 10px;">Thêm sinh viên</a>
   <table>
     <tr>
       <th>STT</th>

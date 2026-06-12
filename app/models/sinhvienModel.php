@@ -47,4 +47,32 @@ class sinhvienModel
 
     return ['sinhviens' => $result, 'totalPages' => $totalPages];
   }
+
+  public function getSinhVienById($id)
+  {
+    $query = "SELECT * FROM sinhvien WHERE id = :id";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+  }
+
+  public function update($id, $MSSV, $HoTen, $GioiTinh)
+  {
+    $query = "UPDATE sinhvien SET MSSV = :MSSV, HoTen = :HoTen, GioiTinh = :GioiTinh WHERE id = :id";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+    $stmt->bindParam(':MSSV', $MSSV);
+    $stmt->bindParam(':HoTen', $HoTen);
+    $stmt->bindParam(':GioiTinh', $GioiTinh);
+    return $stmt->execute();
+  }
+
+  public function delete($id)
+  {
+    $query = "DELETE FROM sinhvien WHERE id = :id";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+    return $stmt->execute();
+  }
 }
