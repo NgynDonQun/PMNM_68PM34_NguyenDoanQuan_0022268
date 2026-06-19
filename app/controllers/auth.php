@@ -2,7 +2,7 @@
     session_start();
     class auth{
         protected $user=[
-            'admin' => '030205',
+            'admin' => '00000',
             'tai' => '0024268'
         ];
         public function login() {
@@ -18,5 +18,13 @@
                     exit();
                 }
             }
+        }
+
+        public function logout() {
+            $_SESSION = [];
+            session_unset();
+            session_destroy();
+            header('Location: /home/login');
+            exit();
         }
     }

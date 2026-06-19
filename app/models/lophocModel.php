@@ -1,6 +1,6 @@
 <?php
 require_once "../app/core/DB.php";
-class sinhvienModel
+class lophocModel
 {
   private $conn;
   public function __construct()
@@ -8,22 +8,22 @@ class sinhvienModel
     $this->conn = ConnectDB::Connect();
   }
 
-  public function getAllSinhVien()
+  public function getAllLopHoc()
   {
-    $query = "SELECT * FROM sinhvien";
+    $query = "SELECT * FROM lophoc ORDER BY id ASC";
     $stmt = $this->conn->prepare($query);
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
   }
 
-  public function create($MSSV, $HoTen, $GioiTinh, $MaLop = null)
+  public function create($MaLop, $TenLop, $SiSo, $GiaoVien)
   {
-    $query = "INSERT INTO sinhvien (MSSV, HoTen, GioiTinh, MaLop) VALUES ( :MSSV, :HoTen, :GioiTinh, :MaLop )";
+    $query = "INSERT INTO lophoc (MaLop, TenLop, SiSo, GiaoVien) VALUES (:MaLop, :TenLop, :SiSo, :GiaoVien)";
     $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(':MSSV', $MSSV);
-    $stmt->bindParam(':HoTen', $HoTen);
-    $stmt->bindParam(':GioiTinh', $GioiTinh);
     $stmt->bindParam(':MaLop', $MaLop);
+    $stmt->bindParam(':TenLop', $TenLop);
+    $stmt->bindParam(':SiSo', $SiSo, PDO::PARAM_INT);
+    $stmt->bindParam(':GiaoVien', $GiaoVien);
     if ($stmt->execute()) {
       return true;
     } else {
@@ -31,30 +31,24 @@ class sinhvienModel
     }
   }
 
-  /**
-   * Lấy danh sách sinh viên có phân trang, kèm tìm kiếm theo Họ tên/MSSV
-   * và lọc theo Mã lớp. Trả kèm Tên lớp (JOIN bảng lophoc).
-   */
-  public function paging($limit = 10, $offset = 0, $search = "", $maLop = "")
+  public function paging($limit = 10, $offset = 0, $search = "")
   {
     $conditions = [];
     $params = [];
 
     if ($search !== "") {
-      $conditions[] = "(sv.HoTen LIKE :search OR sv.MSSV LIKE :search)";
+      $conditions[] = "(lh.MaLop LIKE :search OR lh.TenLop LIKE :search)";
       $params[':search'] = '%' . $search . '%';
-    }
-    if ($maLop !== "") {
-      $conditions[] = "sv.MaLop = :malop";
-      $params[':malop'] = $maLop;
     }
     $whereSql = $conditions ? ('WHERE ' . implode(' AND ', $conditions)) : '';
 
-    $query = "SELECT sv.*, lh.TenLop
-              FROM sinhvien sv
-              LEFT JOIN lophoc lh ON sv.MaLop = lh.MaLop
+    // Đếm số sinh viên thực tế đang thuộc mỗi lớp
+    $query = "SELECT lh.*, COUNT(sv.id) AS SiSoThucTe
+              FROM lophoc lh
+              LEFT JOIN sinhvien sv ON sv.MaLop = lh.MaLop
               $whereSql
-              ORDER BY sv.id ASC
+              GROUP BY lh.id
+              ORDER BY lh.id ASC
               LIMIT :limit OFFSET :offset";
     $stmt = $this->conn->prepare($query);
     foreach ($params as $key => $value) {
@@ -65,7 +59,7 @@ class sinhvienModel
     $stmt->execute();
     $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $countQuery = "SELECT COUNT(*) FROM sinhvien sv $whereSql";
+    $countQuery = "SELECT COUNT(*) FROM lophoc lh $whereSql";
     $countStmt = $this->conn->prepare($countQuery);
     foreach ($params as $key => $value) {
       $countStmt->bindValue($key, $value);
@@ -76,36 +70,36 @@ class sinhvienModel
     $totalPages = $limit > 0 ? (int)ceil($totalRecords / $limit) : 1;
 
     return [
-      'sinhviens' => $result,
+      'lophocs' => $result,
       'totalPages' => $totalPages,
       'totalRecords' => $totalRecords,
     ];
   }
 
-  public function getSinhVienById($id)
+  public function getLopHocById($id)
   {
-    $query = "SELECT * FROM sinhvien WHERE id = :id";
+    $query = "SELECT * FROM lophoc WHERE id = :id";
     $stmt = $this->conn->prepare($query);
     $stmt->bindParam(':id', $id, PDO::PARAM_INT);
     $stmt->execute();
     return $stmt->fetch(PDO::FETCH_ASSOC);
   }
 
-  public function update($id, $MSSV, $HoTen, $GioiTinh, $MaLop = null)
+  public function update($id, $MaLop, $TenLop, $SiSo, $GiaoVien)
   {
-    $query = "UPDATE sinhvien SET MSSV = :MSSV, HoTen = :HoTen, GioiTinh = :GioiTinh, MaLop = :MaLop WHERE id = :id";
+    $query = "UPDATE lophoc SET MaLop = :MaLop, TenLop = :TenLop, SiSo = :SiSo, GiaoVien = :GiaoVien WHERE id = :id";
     $stmt = $this->conn->prepare($query);
     $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-    $stmt->bindParam(':MSSV', $MSSV);
-    $stmt->bindParam(':HoTen', $HoTen);
-    $stmt->bindParam(':GioiTinh', $GioiTinh);
     $stmt->bindParam(':MaLop', $MaLop);
+    $stmt->bindParam(':TenLop', $TenLop);
+    $stmt->bindParam(':SiSo', $SiSo, PDO::PARAM_INT);
+    $stmt->bindParam(':GiaoVien', $GiaoVien);
     return $stmt->execute();
   }
 
   public function delete($id)
   {
-    $query = "DELETE FROM sinhvien WHERE id = :id";
+    $query = "DELETE FROM lophoc WHERE id = :id";
     $stmt = $this->conn->prepare($query);
     $stmt->bindParam(':id', $id, PDO::PARAM_INT);
     return $stmt->execute();

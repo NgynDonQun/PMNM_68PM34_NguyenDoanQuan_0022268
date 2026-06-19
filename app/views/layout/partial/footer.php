@@ -1,20 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <style>
-        .footer{
-            width: 100%;
-            height: 80px;
-            background-color:blue;
-            position: fixed;
-            bottom: 0; 
-        }
-    </style>
-</head>
-<body>
-    <div class="footer"></div>
-</body>
-</html>
+<style>
+  .site-footer {
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
+    margin-top: 32px;
+  }
+  .site-footer-inner {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 18px 24px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--color-text-muted);
+  }
+  .site-footer-inner a { color: var(--color-text-muted); text-decoration: underline; text-underline-offset: 2px; }
+  .site-footer-inner a:hover { color: var(--color-primary); }
+</style>
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    &copy; <?php echo date("Y"); ?> Hệ thống Quản lý Sinh viên — PHP/MySQL
+  </div>
+</footer>

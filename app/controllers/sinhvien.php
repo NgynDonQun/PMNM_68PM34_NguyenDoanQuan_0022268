@@ -2,22 +2,50 @@
 require_once "../app/core/controller.php";
 class sinhvien extends Controller
 {
-  public function index($limit = 5, $offset = 0, $search = "")
+  public function index($limitParam = null, $offsetParam = null)
   {
+    $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : ($limitParam !== null ? (int)$limitParam : 10);
+    $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : ($offsetParam !== null ? (int)$offsetParam : 0);
+    $limit = $limit > 0 ? $limit : 10;
+    $offset = $offset >= 0 ? $offset : 0;
+    $search = trim($_GET['search'] ?? '');
+    $maLopFilter = trim($_GET['malop'] ?? '');
+
     $sinhvienModel = $this->model('sinhvienModel');
-    //$sinhviens = $sinhvienModel->getAllSinhVien();
-    $result = $sinhvienModel->paging($limit, $offset, $search);
+    $result = $sinhvienModel->paging($limit, $offset, $search, $maLopFilter);
     $sinhviens = $result['sinhviens'];
     $totalPages = $result['totalPages'];
+    $totalRecords = $result['totalRecords'];
+
+    $lophocModel = $this->model('lophocModel');
+    $lophocs = $lophocModel->getAllLopHoc();
+
     // Trả về View
-    //require_once "../app/views/sinhvien/index.php";
-    $this->view('layout/masterLayout', ['viewname' => 'sinhvien/index', 'sinhviens' => $sinhviens, 'title' => 'Danh sách sinh viên', 'totalPages' => $totalPages]);
+    $this->view('layout/masterLayout', [
+      'viewname' => 'sinhvien/index',
+      'sinhviens' => $sinhviens,
+      'title' => 'Danh sách sinh viên',
+      'totalPages' => $totalPages,
+      'totalRecords' => $totalRecords,
+      'limit' => $limit,
+      'offset' => $offset,
+      'search' => $search,
+      'maLopFilter' => $maLopFilter,
+      'lophocs' => $lophocs,
+    ]);
   }
 
   public function create()
   {
+    $lophocModel = $this->model('lophocModel');
+    $lophocs = $lophocModel->getAllLopHoc();
+
     // Trả về View
-    require_once "../app/views/sinhvien/create.php";
+    $this->view('layout/masterLayout', [
+      'viewname' => 'sinhvien/create',
+      'title' => 'Thêm sinh viên',
+      'lophocs' => $lophocs,
+    ]);
   }
 
   public function store()
@@ -26,9 +54,10 @@ class sinhvien extends Controller
       $MSSV = $_POST['MSSV'];
       $HoTen = $_POST['HoTen'];
       $GioiTinh = $_POST['GioiTinh'];
+      $MaLop = $_POST['MaLop'] !== '' ? $_POST['MaLop'] : null;
 
       $sinhvienModel = $this->model('sinhvienModel');
-      $result = $sinhvienModel->create($MSSV, $HoTen, $GioiTinh);
+      $result = $sinhvienModel->create($MSSV, $HoTen, $GioiTinh, $MaLop);
       if ($result) {
         header("Location: /sinhvien/index");
         exit();
@@ -50,7 +79,15 @@ class sinhvien extends Controller
       exit();
     }
 
-    $this->view('layout/masterLayout', ['viewname' => 'sinhvien/edit', 'sinhvien' => $sinhvien, 'title' => 'Sửa thông tin Sinh viên']);
+    $lophocModel = $this->model('lophocModel');
+    $lophocs = $lophocModel->getAllLopHoc();
+
+    $this->view('layout/masterLayout', [
+      'viewname' => 'sinhvien/edit',
+      'sinhvien' => $sinhvien,
+      'lophocs' => $lophocs,
+      'title' => 'Sửa thông tin Sinh viên',
+    ]);
   }
 
   public function update($id)
@@ -60,9 +97,10 @@ class sinhvien extends Controller
       $MSSV = $_POST['MSSV'];
       $HoTen = $_POST['HoTen'];
       $GioiTinh = $_POST['GioiTinh'];
+      $MaLop = $_POST['MaLop'] !== '' ? $_POST['MaLop'] : null;
 
       $sinhvienModel = $this->model('sinhvienModel');
-      $result = $sinhvienModel->update($id, $MSSV, $HoTen, $GioiTinh);
+      $result = $sinhvienModel->update($id, $MSSV, $HoTen, $GioiTinh, $MaLop);
 
       if ($result) {
         header("Location: /sinhvien/index");
@@ -89,4 +127,3 @@ class sinhvien extends Controller
     }
   }
 }
-
