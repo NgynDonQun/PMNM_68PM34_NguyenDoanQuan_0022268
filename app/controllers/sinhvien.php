@@ -2,49 +2,50 @@
 require_once "../app/core/controller.php";
 class sinhvien extends Controller
 {
-  public function index($limitParam = null, $offsetParam = null)
+public function index()
   {
-    $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : ($limitParam !== null ? (int)$limitParam : 10);
-    $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : ($offsetParam !== null ? (int)$offsetParam : 0);
-    $limit = $limit > 0 ? $limit : 10;
-    $offset = $offset >= 0 ? $offset : 0;
-    $search = trim($_GET['search'] ?? '');
-    $maLopFilter = trim($_GET['malop'] ?? '');
+    // 1. Lấy dữ liệu từ URL (phục vụ bộ lọc và phân trang của View)
+    $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 5;
+    $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
+    $search = isset($_GET['search']) ? trim($_GET['search']) : "";
+    $maLopFilter = isset($_GET['malop']) ? trim($_GET['malop']) : "";
 
     $sinhvienModel = $this->model('sinhvienModel');
-    $result = $sinhvienModel->paging($limit, $offset, $search, $maLopFilter);
+    $result = $sinhvienModel->paging($limit, $offset, $search); 
+    
     $sinhviens = $result['sinhviens'];
     $totalPages = $result['totalPages'];
-    $totalRecords = $result['totalRecords'];
+    
+    // 2. Bổ sung các biến View đang gọi mà bị thiếu
+    $totalRecords = isset($result['totalRecords']) ? $result['totalRecords'] : count($sinhviens); 
+    $lophocs = []; // Tạm thời để mảng rỗng cho View khỏi báo lỗi, bạn cần bổ sung logic lấy danh sách lớp sau
 
-    $lophocModel = $this->model('lophocModel');
-    $lophocs = $lophocModel->getAllLopHoc();
-
-    // Trả về View
+    // 3. Truyền đủ các tham số sang View
     $this->view('layout/masterLayout', [
-      'viewname' => 'sinhvien/index',
-      'sinhviens' => $sinhviens,
-      'title' => 'Danh sách sinh viên',
+      'viewname' => 'sinhvien/index', 
+      'title' => 'Danh sách sinh viên', 
+      'sinhviens' => $sinhviens, 
+      'lophocs' => $lophocs,       // Thêm biến lophocs
+      'limit' => $limit,           // Thêm biến limit
+      'offset' => $offset,         // Thêm biến offset
+      'search' => $search,         // Thêm biến search
+      'maLopFilter' => $maLopFilter, // Thêm biến maLopFilter
       'totalPages' => $totalPages,
-      'totalRecords' => $totalRecords,
-      'limit' => $limit,
-      'offset' => $offset,
-      'search' => $search,
-      'maLopFilter' => $maLopFilter,
-      'lophocs' => $lophocs,
+      'totalRecords' => $totalRecords // Thêm biến totalRecords
     ]);
   }
 
-  public function create()
+ public function create()
   {
+    // 1. Gọi model lophocModel để lấy danh sách lớp
     $lophocModel = $this->model('lophocModel');
     $lophocs = $lophocModel->getAllLopHoc();
 
-    // Trả về View
+    // 2. Trả về View qua masterLayout để nhận CSS theme xanh, đồng thời truyền $lophocs sang
     $this->view('layout/masterLayout', [
       'viewname' => 'sinhvien/create',
       'title' => 'Thêm sinh viên',
-      'lophocs' => $lophocs,
+      'lophocs' => $lophocs
     ]);
   }
 
@@ -54,10 +55,16 @@ class sinhvien extends Controller
       $MSSV = $_POST['MSSV'];
       $HoTen = $_POST['HoTen'];
       $GioiTinh = $_POST['GioiTinh'];
-      $MaLop = $_POST['MaLop'] !== '' ? $_POST['MaLop'] : null;
-
+      
+      // Bổ sung lấy thêm MaLop từ form gửi lên
+      $MaLop = isset($_POST['MaLop']) ? $_POST['MaLop'] : null;
+      
       $sinhvienModel = $this->model('sinhvienModel');
-      $result = $sinhvienModel->create($MSSV, $HoTen, $GioiTinh, $MaLop);
+      
+      // Chú ý: Bạn cần đảm bảo hàm create() trong sinhvienModel của bạn 
+      // đã được cập nhật để nhận tham số thứ 4 là $MaLop nhé!
+      $result = $sinhvienModel->create($MSSV, $HoTen, $GioiTinh, $MaLop); 
+      
       if ($result) {
         header("Location: /sinhvien/index");
         exit();
@@ -68,7 +75,7 @@ class sinhvien extends Controller
     }
   }
 
-  public function edit($id)
+ public function edit($id)
   {
     $id = (int)$id;
     $sinhvienModel = $this->model('sinhvienModel');
@@ -79,14 +86,15 @@ class sinhvien extends Controller
       exit();
     }
 
+    // Lấy danh sách lớp để hiển thị trong <select>
     $lophocModel = $this->model('lophocModel');
     $lophocs = $lophocModel->getAllLopHoc();
 
     $this->view('layout/masterLayout', [
-      'viewname' => 'sinhvien/edit',
-      'sinhvien' => $sinhvien,
-      'lophocs' => $lophocs,
-      'title' => 'Sửa thông tin Sinh viên',
+        'viewname' => 'sinhvien/edit', 
+        'sinhvien' => $sinhvien, 
+        'lophocs' => $lophocs, // Truyền biến lớp học sang view
+        'title' => 'Sửa thông tin Sinh viên'
     ]);
   }
 
@@ -97,9 +105,13 @@ class sinhvien extends Controller
       $MSSV = $_POST['MSSV'];
       $HoTen = $_POST['HoTen'];
       $GioiTinh = $_POST['GioiTinh'];
-      $MaLop = $_POST['MaLop'] !== '' ? $_POST['MaLop'] : null;
+      
+      // Hứng thêm biến MaLop từ form Edit
+      $MaLop = isset($_POST['MaLop']) ? $_POST['MaLop'] : null; 
 
       $sinhvienModel = $this->model('sinhvienModel');
+      
+      // Chú ý: Đảm bảo hàm update() trong Model của bạn đã nhận thêm tham số $MaLop
       $result = $sinhvienModel->update($id, $MSSV, $HoTen, $GioiTinh, $MaLop);
 
       if ($result) {
@@ -127,3 +139,4 @@ class sinhvien extends Controller
     }
   }
 }
+

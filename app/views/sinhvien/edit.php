@@ -39,12 +39,14 @@
     <div>
       <label class="field-label" for="MaLop">Lớp học</label>
       <select class="select" id="MaLop" name="MaLop">
-        <option value="" <?php echo empty($sinhvien['MaLop']) ? 'selected' : ''; ?>>-- Chưa chọn lớp --</option>
-        <?php foreach ($lophocs as $lop) : ?>
-          <option value="<?php echo htmlspecialchars($lop['MaLop']); ?>" <?php echo ($sinhvien['MaLop'] === $lop['MaLop']) ? 'selected' : ''; ?>>
-            <?php echo htmlspecialchars($lop['MaLop'] . ' - ' . $lop['TenLop']); ?>
-          </option>
-        <?php endforeach; ?>
+        <option value="">-- Chưa chọn lớp --</option>
+        <?php if (!empty($lophocs)): ?>
+          <?php foreach ($lophocs as $lop) : ?>
+            <option value="<?php echo htmlspecialchars($lop['MaLop']); ?>" <?php echo (isset($sinhvien['MaLop']) && $sinhvien['MaLop'] === $lop['MaLop']) ? 'selected' : ''; ?>>
+              <?php echo htmlspecialchars($lop['MaLop'] . ' - ' . $lop['TenLop']); ?>
+            </option>
+          <?php endforeach; ?>
+        <?php endif; ?>
       </select>
     </div>
 
